@@ -94,16 +94,44 @@ else
 
     if((New-TimeSpan -Start $animes_ids_last_write_time -End $(Get-Date) | Select-Object -ExpandProperty Days) -lt $update_anime_info_interval)
     {
-        Write-Host "[INFO] Anime_Ids.txt was written less than $update_anime_info_interval day(s) ago, keeping info`n" -ForegroundColor Yellow
+        Write-Host "[INFO] Anime_Ids.txt was written less than $update_anime_info_interval day(s) ago, keeping info" -ForegroundColor Yellow
     }
     else
     {
-        Write-Host "[INFO] Anime_Ids.txt was written more than $update_anime_info_interval day(s) ago, re-writing info`n" -ForegroundColor Yellow
+        Write-Host "[INFO] Anime_Ids.txt was written more than $update_anime_info_interval day(s) ago, re-writing info" -ForegroundColor Yellow
         $get_horriblesubs_info = $true
     }
 }
 
 if($get_horriblesubs_info)
 {
-    
+    [int] $counter = 0
+    [int] $id = 0
+
+    while($counter -lt 50)
+    {
+         $page = (Invoke-RestMethod -Method Get -UseBasicParsing -Uri "$horriblesubs_url=$id") -split ">"
+
+         if($page -eq "There are no individual episodes for this show")
+         {
+            $counter++
+         }
+         else
+         {
+            [string] $anime_name = $page[4] -replace "(^\s?|\s+\<.+)",""
+            [string] $anime_info = "$id || $anime_name".ToString()
+            Out-File -FilePath "$series_path\Animes_Ids.txt" -InputObject $anime_info -Append -Encoding utf8
+
+            $counter = 0
+         }
+
+         $id++
+    }
+
+    Write-Host "[INFO] Anime_Ids.txt was re-written with new info" -ForegroundColor Yellow
 }
+
+#Intentionally here
+Write-Host
+
+[string] $shows_info = Get-Content -Path "$series_path\Animes_Ids.txt"
