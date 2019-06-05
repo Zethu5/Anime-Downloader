@@ -16,9 +16,9 @@ $ErrorActionPreference = "Stop"
 [string] $regex_episode = "\s+?\-\s+?\d+"
 [string] $horriblesubs_url = "https://horriblesubs.info/api.php?method=getshows&type=show&showid"
 
-$shows_folders = $(Get-ChildItem -Path $series_path -Directory -Force)
+$shows_folders = $(Get-ChildItem -Path $series_path -Directory -Force -Attributes !H)
 
-[string[]] $shows_names = @()
+[string[]] $shows_to_search_for = @()
 
 Write-Host "[INFO] Getting shows folders that are actively being watched`n" -ForegroundColor Yellow
 
@@ -31,7 +31,7 @@ foreach($show_folder in $shows_folders)
     {
         # Check if the episode I need to watch, already exists in the folder,
         # if so, go to the next show - no need to download an already existing episode
-        $show_folder.Name -match "\s+\-\s+\d+" | Out-Null
+        $show_folder.Name -match $regex_episode | Out-Null
         $Matches[0] -match "\d+" | Out-Null
         [string] $show_episode_need_to_see = $Matches[0]
 
@@ -47,23 +47,35 @@ foreach($show_folder in $shows_folders)
 
         if($episodes_in_folder -notcontains $show_episode_need_to_see)
         {
-            $shows_names += $($show_folder.Name -replace "$regex_episode$","")
+            [string] $show_name_without_episode_indication = $show_folder.Name -replace "$regex_episode$",""
+            $shows_to_search_for += $show_name_without_episode_indication
 
             if($episodes_in_folder)
             {
-                $shows_episodes_in_folder.Add($shows_names[-1],$episodes_in_folder)
+                $shows_episodes_in_folder.Add($shows_to_search_for[-1],$episodes_in_folder)
             }
             else
             {
-                $shows_episodes_in_folder.Add($shows_names[-1],"")
+                $shows_episodes_in_folder.Add($shows_to_search_for[-1],"")
             }
             
-            
-            Write-Host "[ACTION] Looking for $($shows_names[-1]) episode $show_episode_need_to_see" -ForegroundColor Cyan   
+            if($show_episode_need_to_see -eq 0)
+            {
+                Write-Host "[SEARCH ALL]  $($shows_to_search_for[-1])" -ForegroundColor Cyan   
+            }
+            else
+            {
+                if([int]($show_episode_need_to_see) -lt 10) 
+                {
+                    $show_episode_need_to_see = "0$show_episode_need_to_see"
+                }
+
+                Write-Host "[SEARCH #$show_episode_need_to_see]  $($shows_to_search_for[-1])" -ForegroundColor Cyan   
+            }
         }
     }
 }
-
+    
 Write-Host ""
 
 # Get all animes and their ids from horriblesubs
@@ -72,28 +84,26 @@ Write-Host ""
 if(!(Test-Path "$series_path\Animes_Ids.txt"))
 {
     Write-Host "[INFO] Anime_Ids.txt file does not exist, creating`n" -ForegroundColor Yellow
-    New-Item -Path $series_path -Name "Animes_Ids.txt" -ItemType File -Value "$(Get-Date)`n" -Force | Out-Null
+    New-Item -Path $series_path -Name "Animes_Ids.txt" -ItemType File -Force | Out-Null
     $get_horriblesubs_info = $true
 }
 else
 {
-    Write-Host "[INFO] Anime_Ids.txt file does exist, checking write time`n" -ForegroundColor Yellow
-    $animes_info = Get-Content -Path "$series_path\Animes_Ids.txt"
+    Write-Host "[INFO] Anime_Ids.txt file does exist, checking last write time" -ForegroundColor Yellow
+    $animes_ids_last_write_time = Get-ChildItem -Path $series_path\Animes_Ids.txt | Select-Object -ExpandProperty LastWriteTime
 
-    try
-    {    
-        [DateTime]::Parse($animes_info[0]) | Out-Null
-
-        if((New-TimeSpan -End (Get-Date) -Start $animes_info[0] | Select-Object -ExpandProperty Hours) -ge $update_anime_info_interval -or $animes_info -notmatch "||")
-        {
-            Write-Host "[ACTION] Anime_Ids.txt was written more than 1 day ago, re-writing info" -ForegroundColor Cyan
-            $get_horriblesubs_info = $true
-            New-Item -Path $series_path -Name "Animes_Ids.txt" -ItemType File -Value "$(Get-Date)`n" -Force | Out-Null
-        }
-        else
-        {
-            Write-Host "[INFO] Anime_Ids.txt was written less than 1 day ago, keeping info`n" -ForegroundColor Yellow
-        }
+    if((New-TimeSpan -Start $animes_ids_last_write_time -End $(Get-Date) | Select-Object -ExpandProperty Days) -lt $update_anime_info_interval)
+    {
+        Write-Host "[INFO] Anime_Ids.txt was written less than $update_anime_info_interval day(s) ago, keeping info`n" -ForegroundColor Yellow
     }
-    catch{}
+    else
+    {
+        Write-Host "[INFO] Anime_Ids.txt was written more than $update_anime_info_interval day(s) ago, re-writing info`n" -ForegroundColor Yellow
+        $get_horriblesubs_info = $true
+    }
+}
+
+if($get_horriblesubs_info)
+{
+    
 }
