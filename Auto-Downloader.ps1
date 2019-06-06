@@ -43,16 +43,7 @@ Param
         [ValidateNotNullOrEmpty()]
         [ValidateSet("1080p", "720p", "480p")]
         [string]
-        $episode_quality = "1080p",
-
-        
-        # Episode quality
-        [Parameter(Mandatory=$false, 
-                   Position=5)]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [switch]
-        $download_all = $false
+        $episode_quality = "1080p"
 )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -96,36 +87,33 @@ foreach($show_folder in $shows_folders)
                                             }
                                          }
 
-        if($episodes_in_folder -notcontains $show_episode_need_to_see)
+        [string] $show_name_without_episode_indication = $show_folder.Name -replace "$regex_episode$",""
+        $shows_to_search_for += $show_name_without_episode_indication
+
+        if($episodes_in_folder)
         {
-            [string] $show_name_without_episode_indication = $show_folder.Name -replace "$regex_episode$",""
-            $shows_to_search_for += $show_name_without_episode_indication
+            $shows_episodes_in_folder.Add($shows_to_search_for[-1],$episodes_in_folder)
+        }
+        else
+        {
+            $shows_episodes_in_folder.Add($shows_to_search_for[-1],0)
+        }
+        
+        if($show_episode_need_to_see -eq 0)
+        {
+            Write-Host "[SEARCH ALL]  $($shows_to_search_for[-1])" -ForegroundColor Cyan
+            $shows_episodes_to_search.Add($shows_to_search_for[-1],0)   
+        }
+        else
+        {
+            $shows_episodes_to_search.Add($shows_to_search_for[-1], $show_episode_need_to_see)
 
-            if($episodes_in_folder)
+            if([int]($show_episode_need_to_see) -lt 10) 
             {
-                $shows_episodes_in_folder.Add($shows_to_search_for[-1],$episodes_in_folder)
+                $show_episode_need_to_see = "0$show_episode_need_to_see"
             }
-            else
-            {
-                $shows_episodes_in_folder.Add($shows_to_search_for[-1],0)
-            }
-            
-            if($show_episode_need_to_see -eq 0)
-            {
-                Write-Host "[SEARCH ALL]  $($shows_to_search_for[-1])" -ForegroundColor Cyan
-                $shows_episodes_to_search.Add($shows_to_search_for[-1],0)   
-            }
-            else
-            {
-                $shows_episodes_to_search.Add($shows_to_search_for[-1], $show_episode_need_to_see)
 
-                if([int]($show_episode_need_to_see) -lt 10) 
-                {
-                    $show_episode_need_to_see = "0$show_episode_need_to_see"
-                }
-
-                Write-Host "[SEARCH #$show_episode_need_to_see]  $($shows_to_search_for[-1])" -ForegroundColor Cyan   
-            }
+            Write-Host "[SEARCH #$show_episode_need_to_see]  $($shows_to_search_for[-1])" -ForegroundColor Cyan   
         }
     }
 }
@@ -189,9 +177,6 @@ if($get_horriblesubs_info)
     Write-Host "[INFO] Anime_Ids.txt was re-written with new info" -ForegroundColor Yellow
 }
 
-#Intentionally here
-Write-Host
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Write-Host "[INFO] Getting torrent magnet link for each show`n" -ForegroundColor Yellow
@@ -249,18 +234,19 @@ foreach($show_to_search_for in $shows_to_search_for)
     {
         $shows_episodes_found.Add($show_to_search_for,$false)
     }
-
-    Write-Host
 }
+
+Write-Host
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if($torrents_downloading -gt 0)
 {
-    Write-Host "[INFO] Checking if torrents finished downloading, interval: $torrent_check_internval minute(s)" -ForegroundColor Yellow
+    Write-Host "[INFO] Listening to torrents" -ForegroundColor Yellow
     
     # Check every minute if all torrents finished downloading
     [int] $torrents_finished = 0
+    [int] $sleep_counter = 1
 
     while($torrents_finished -ne $torrents_downloading)
     {
@@ -287,8 +273,9 @@ if($torrents_downloading -gt 0)
 
         if($torrents_finished -ne $torrents_downloading)
         {
-            Write-Host "[INFO] Still downloading, sleeping for $torrent_check_internval minute(s)" -ForegroundColor Yellow
             Start-Sleep -Seconds (60 * $torrent_check_internval)
+            Write-Host "[$($sleep_counter * $torrent_check_internval) minutes] Still downloading" -ForegroundColor Yellow
+            $sleep_counter++
         }
     }
 }
