@@ -4,7 +4,8 @@
 [string] $series_path = "E:\Series"
 [string] $torrent_default_download_path = "E:\"
 [int] $update_anime_info_interval = 7 # In days
-[int] $torrent_check_internval = 1 # In minutes
+[int] $torrent_check_internval = 2 # In minutes
+[string] $episode_quality = "1080p" # Choices: 1080p,720p,480p
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -16,6 +17,8 @@ $ErrorActionPreference = "Stop"
 [string] $regex_episode = "\s+?\-\s+?\d+"
 [string] $horriblesubs_url = "https://horriblesubs.info/api.php?method=getshows&type=show&showid"
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 $shows_folders = $(Get-ChildItem -Path $series_path -Directory -Force -Attributes !H)
 
 [string[]] $shows_to_search_for = @()
@@ -23,6 +26,7 @@ $shows_folders = $(Get-ChildItem -Path $series_path -Directory -Force -Attribute
 Write-Host "[INFO] Getting shows folders that are actively being watched`n" -ForegroundColor Yellow
 
 $shows_episodes_in_folder = @{}
+$shows_episodes_to_search = @{}
 
 foreach($show_folder in $shows_folders)
 {
@@ -56,15 +60,18 @@ foreach($show_folder in $shows_folders)
             }
             else
             {
-                $shows_episodes_in_folder.Add($shows_to_search_for[-1],"")
+                $shows_episodes_in_folder.Add($shows_to_search_for[-1],0)
             }
             
             if($show_episode_need_to_see -eq 0)
             {
-                Write-Host "[SEARCH ALL]  $($shows_to_search_for[-1])" -ForegroundColor Cyan   
+                Write-Host "[SEARCH ALL]  $($shows_to_search_for[-1])" -ForegroundColor Cyan
+                $shows_episodes_to_search.Add($shows_to_search_for[-1],0)   
             }
             else
             {
+                $shows_episodes_to_search.Add($shows_to_search_for[-1], $show_episode_need_to_see)
+
                 if([int]($show_episode_need_to_see) -lt 10) 
                 {
                     $show_episode_need_to_see = "0$show_episode_need_to_see"
@@ -76,7 +83,9 @@ foreach($show_folder in $shows_folders)
     }
 }
     
-Write-Host ""
+Write-Host
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Get all animes and their ids from horriblesubs
 [boolean] $get_horriblesubs_info = $false
@@ -102,6 +111,8 @@ else
         $get_horriblesubs_info = $true
     }
 }
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if($get_horriblesubs_info)
 {
@@ -134,4 +145,127 @@ if($get_horriblesubs_info)
 #Intentionally here
 Write-Host
 
-[string] $shows_info = Get-Content -Path "$series_path\Animes_Ids.txt"
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Write-Host "[INFO] Getting torrent magnet link for each show`n" -ForegroundColor Yellow
+
+[int] $torrents_downloading = 0
+$shows_episodes_found = @{}
+
+$shows_info = Get-Content -Path "$series_path\Animes_Ids.txt"
+
+foreach($show_to_search_for in $shows_to_search_for)
+{
+    [string]($shows_info -cmatch $show_to_search_for) -match "\d+" | Out-Null
+    [string] $show_id = $Matches[0]
+    [int] $show_page_interval = 0
+    $show_page = ""
+
+    while($show_page -ne "DONE")
+    {
+        $show_page = Invoke-WebRequest -UseBasicParsing -Uri "$horriblesubs_url=$show_id&nextid=$show_page_interval" | Select-Object -ExpandProperty Content
+        $show_page_divs = $show_page -split '<div class="rls-links-container">'
+
+        foreach($show_page_div in $show_page_divs)
+        {
+            if($show_page_div -match "id=`"0?\d+-$episode_quality`"")
+            {
+                $div -match "id=`"0?\d+-$episode_quality`"" | Out-Null
+                [int] $div_episode_number = $Matches[0] -replace "(id=`"|-$episode_quality`")",""
+
+                if($div_episode_number -ge $shows_episodes_to_search.$show_to_search_for -and $shows_episodes_in_folder.$show_to_search_for -notcontains $div_episode_number)
+                {
+                    $magnet_link = ($show_page_div `
+                                    -split "class=`"rls-link link-$episode_quality`" id=`"0?\d+-$episode_quality`"><span class=`"rls-link-label`">$episode_quality`:</span><span class=`"dl-type hs-magnet-link`"><a title=`"Magnet Link`" href=`"" `
+                                    -split "`">Magnet")[3]
+
+                    if(!$shows_episodes_found.Contains($show_to_search_for))
+                    {
+                        $shows_episodes_found.Add($show_to_search_for,$true)
+                    }
+                }
+
+                if($magnet_link)
+                {
+                    $torrents_downloading++
+                    start $magnet_link
+                    $magnet_link = $null
+                    Write-Host "[DOWNLOADING] $show_to_search_for #$div_episode_number $episode_quality" -ForegroundColor Cyan
+                }
+            }
+        }
+
+        $show_page_interval++
+    }
+
+    if(!$shows_episodes_found.Contains($show_to_search_for))
+    {
+        $shows_episodes_found.Add($show_to_search_for,$false)
+    }
+
+    Write-Host
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+if($torrents_downloading -gt 0)
+{
+    Write-Host "[INFO] Checking if torrents finished downloading, interval: $torrent_check_internval minute(s)" -ForegroundColor Yellow
+    
+    # Check every minute if all torrents finished downloading
+    [int] $torrents_finished = 0
+
+    while($torrents_finished -ne $torrents_downloading)
+    {
+        $files_in_default_torrent_download_path = Get-ChildItem -Path $torrent_default_download_path -File -Force
+
+        foreach($show_to_search_for in $shows_to_search_for)
+        {
+            if($files_in_default_torrent_download_path -match $show_to_search_for)
+            {
+                $files = $files_in_default_torrent_download_path -match $show_to_search_for
+
+                foreach($file in $files)
+                {
+                    try
+                    {
+                        Move-Item -LiteralPath $file.FullName -Destination "$series_path\$show_to_search_for - $($shows_episodes_to_search.$show_to_search_for)"
+                        $torrents_finished++
+                        Write-Host "[INFO] Moved $($file.FullName) to $series_path\$show_to_search_for - $($shows_episodes_to_search.$show_to_search_for)" -ForegroundColor Yellow
+                    }
+                    catch{}
+                }
+            }
+        }
+
+        if($torrents_finished -ne $torrents_downloading)
+        {
+            Write-Host "[INFO] Still downloading, sleeping for $torrent_check_internval minute(s)" -ForegroundColor Yellow
+            Start-Sleep -Seconds (60 * $torrent_check_internval)
+        }
+    }
+}
+else
+{
+    Write-Host "[INFO] Didn't find any episode to download, exiting" -ForegroundColor Yellow
+}
+
+Write-Host
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Rename all folders with '- 0' at the end to '- 1'
+# to not search all episodes for this show again in the next run
+foreach($show_to_search_for in $shows_to_search_for)
+{
+    if($shows_episodes_to_search.$show_to_search_for -eq 0)
+    {
+        if($shows_episodes_found.$show_to_search_for)
+        {
+            Write-Host "[INFO] All episodes were found for $show_to_search_for, renaming end to: '- 1'" -ForegroundColor Yellow
+            Rename-Item -LiteralPath "$series_path\$show_to_search_for - $($shows_episodes_to_search.$show_to_search_for)" -NewName "$show_to_search_for - 1" -Force
+        }
+
+        Write-Host
+    }
+}
