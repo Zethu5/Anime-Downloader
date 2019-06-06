@@ -268,4 +268,4 @@ foreach($show_to_search_for in $shows_to_search_for)
 
         Write-Host
     }
-} 
+}
