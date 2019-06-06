@@ -1,12 +1,59 @@
 ﻿# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # ~~~~~~~~~~~~~~~~~~~~~~~ Config ~~~~~~~~~~~~~~~~~~~~~~~ #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-[string] $series_path = "E:\Series"
-[string] $torrent_default_download_path = "E:\"
-[int] $update_anime_info_interval = 7 # In days
-[int] $torrent_check_internval = 2 # In minutes
-[string] $episode_quality = "1080p" # Choices: 1080p,720p,480p
 
+Param
+(
+        # Anime series folder path
+        [Parameter(Mandatory=$false, 
+                   Position=0)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $series_path = "E:\Series",
+
+        # Torrent defalt download path
+        [Parameter(Mandatory=$false, 
+                   Position=1)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $torrent_default_download_path = "E:\",
+
+        # Update the anime info (in days)
+        [Parameter(Mandatory=$false,
+                   Position=2)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [int]
+        $update_anime_info_interval = 7,
+
+        # Torrent check interval (in minutes)
+        [Parameter(Mandatory=$false, 
+                   Position=3)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [int]
+        $torrent_check_internval = 2,
+
+        # Episode quality
+        [Parameter(Mandatory=$false, 
+                   Position=4)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet("1080p", "720p", "480p")]
+        [string]
+        $episode_quality = "1080p",
+
+        
+        # Episode quality
+        [Parameter(Mandatory=$false, 
+                   Position=5)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [switch]
+        $download_all = $false
+)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # ~~~~~~~~~~~~~~~~~~~~~ Don't Touch ~~~~~~~~~~~~~~~~~~~~ #
