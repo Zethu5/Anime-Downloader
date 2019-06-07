@@ -136,7 +136,7 @@ else
     Write-Host "[INFO] Anime_Ids.txt file does exist, checking last write time" -ForegroundColor Yellow
     $animes_ids_last_write_time = Get-ChildItem -Path $series_path\Animes_Ids.txt | Select-Object -ExpandProperty LastWriteTime
 
-    if((New-TimeSpan -Start $animes_ids_last_write_time -End $(Get-Date) | Select-Object -ExpandProperty Days) -lt $update_anime_info_interval)
+    if((New-TimeSpan -Start $animes_ids_last_write_time -End $(Get-Date) | Select-Object -ExpandProperty Minutes) -lt $update_anime_info_interval)
     {
         Write-Host "[INFO] Anime_Ids.txt was written less than $update_anime_info_interval day(s) ago, keeping info" -ForegroundColor Yellow
     }
@@ -144,6 +144,8 @@ else
     {
         Write-Host "[INFO] Anime_Ids.txt was written more than $update_anime_info_interval day(s) ago, re-writing info" -ForegroundColor Yellow
         $get_horriblesubs_info = $true
+        Remove-Item -Path "$series_path\Animes_Ids.txt" -Force | Out-Null
+        New-Item -Path $series_path -Name "Animes_Ids.txt" -ItemType File -Force | Out-Null
     }
 }
 
