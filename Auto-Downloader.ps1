@@ -202,10 +202,10 @@ foreach($show_to_search_for in $shows_to_search_for)
 
         foreach($show_page_div in $show_page_divs)
         {
-            if($show_page_div -match "id=`"0?\d+-$episode_quality`"")
+            if($show_page_div -match "id=`"0?\d+-$episode_quality`"" -and $show_page_div -match "$show_to_search_for - 0?\d+ \[$episode_quality\]")
             {
                 $div -match "id=`"0?\d+-$episode_quality`"" | Out-Null
-                [int] $div_episode_number = $Matches[0] -replace "(id=`"|-$episode_quality`")",""
+                [int] $div_episode_number = $Matches[0] -replace "($show_to_search_for - | \[$episode_quality\])",""
 
                 if($div_episode_number -ge $shows_episodes_to_search.$show_to_search_for -and $shows_episodes_in_folder.$show_to_search_for -notcontains $div_episode_number)
                 {
