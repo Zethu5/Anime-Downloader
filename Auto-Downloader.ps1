@@ -96,7 +96,7 @@ foreach($show_folder in $shows_folders)
         }
         else
         {
-            $shows_episodes_in_folder.Add($shows_to_search_for[-1],0)
+            $shows_episodes_in_folder.Add($shows_to_search_for[-1],-1)
         }
         
         if($show_episode_need_to_see -eq 0)
@@ -151,33 +151,88 @@ else
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-if($get_horriblesubs_info)
+function Get-HorribleSubs-Info()
 {
-    [int] $counter = 0
-    [int] $id = 0
-
-    while($counter -lt 50)
+    if($get_horriblesubs_info)
     {
-         $page = (Invoke-RestMethod -Method Get -UseBasicParsing -Uri "$horriblesubs_url=$id") -split ">"
+        [int] $counter = 0
+        [int] $id = 0
+    
+        while($counter -lt 50)
+        {
+             $page = (Invoke-RestMethod -Method Get -UseBasicParsing -Uri "$horriblesubs_url=$id")
 
-         if($page -eq "There are no individual episodes for this show")
-         {
-            $counter++
-         }
-         else
-         {
-            [string] $anime_name = $page[4] -replace "(^\s?|\s+\<.+)",""
-            [string] $anime_info = "$id || $anime_name".ToString()
-            Out-File -FilePath "$series_path\Animes_Ids.txt" -InputObject $anime_info -Append -Encoding utf8
+             if($page.GetType().Name -eq "XmlDocument")
+             {
+                $page = $page.InnerXml
+             }
 
-            $counter = 0
-         }
-
-         $id++
+             $page = $page -split ">"
+    
+             if($page -eq "There are no individual episodes for this show")
+             {
+                $counter++
+             }
+             else
+             {
+                [string] $anime_name = $page[4] -replace "(^\s?|\s+\<.+)",""
+                [string] $anime_info = "$id || $anime_name".ToString()
+                Out-File -FilePath "$series_path\Animes_Ids.txt" -InputObject $anime_info -Append -Encoding utf8
+    
+                $counter = 0
+             }
+    
+             $id++
+        }
+    
+        Write-Host "[INFO] Anime_Ids.txt was re-written with new info" -ForegroundColor Yellow
     }
-
-    Write-Host "[INFO] Anime_Ids.txt was re-written with new info" -ForegroundColor Yellow
 }
+
+Get-HorribleSubs-Info
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Check if every show to search exists in the HorribleSubs info (id, name etc...)
+
+Write-Host
+Write-Host "[INFO] Checking if the shows are in the HorribleSubs info`n" -ForegroundColor Yellow
+
+$shows_info = Get-Content -Path "$series_path\Animes_Ids.txt"
+
+foreach($show_to_search_for in $shows_to_search_for)
+{
+    if($shows_info -cmatch $show_to_search_for)
+    {
+        [string]($shows_info -cmatch $show_to_search_for) -match "\d+" | Out-Null
+        [string] $show_id = $Matches[0]
+
+        [int] $hazahot_num = 3 - $show_id.Length
+        [string] $hazahot = ""
+
+        for([int] $i = 0;$i -le $hazahot_num; $i++)
+        {
+             $hazahot += " "
+        }
+
+        Write-Host "[ $show_id $hazahot] $show_to_search_for" -ForegroundColor Cyan
+    }
+    else
+    {
+        Write-Host "[INFO] '$show_to_search_for' doesn't exist in the HorribleSubs info, re-creating Anime_Ids.txt file" -ForegroundColor Cyan
+        Write-Host
+        exit
+
+        Remove-Item -Path "$series_path\Animes_Ids.txt" -Force | Out-Null
+        New-Item -Path $series_path -Name "Animes_Ids.txt" -ItemType File -Force | Out-Null
+        $get_horriblesubs_info = $true
+        Get-HorribleSubs-Info
+
+        break
+    }
+}
+
+Write-Host
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
