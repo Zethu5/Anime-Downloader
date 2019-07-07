@@ -221,7 +221,6 @@ foreach($show_to_search_for in $shows_to_search_for)
     {
         Write-Host "[INFO] '$show_to_search_for' doesn't exist in the HorribleSubs info, re-creating Anime_Ids.txt file" -ForegroundColor Cyan
         Write-Host
-        exit
 
         Remove-Item -Path "$series_path\Animes_Ids.txt" -Force | Out-Null
         New-Item -Path $series_path -Name "Animes_Ids.txt" -ItemType File -Force | Out-Null
