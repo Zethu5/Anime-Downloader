@@ -193,34 +193,49 @@ Get-HorribleSubs-Info
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+function Get-Show-Id()
+{
+    if($shows_info -cmatch $show_to_search_for)
+    {
+        $found_show_in_shows_info = $true
+        [string]($shows_info -cmatch $show_to_search_for) -match "\d+" | Out-Null
+        [string] $show_id_in_function = $Matches[0]
+    }
+    else
+    {
+        foreach($show_info in $shows_info)
+        {
+            if(($show_info -replace "\w+ \|\| ","") -eq $show_to_search_for)
+            {
+                $found_show_in_shows_info = $true
+                break  
+            }
+        }
+
+        $show_info -match "\d+" | Out-Null
+        [string] $show_id_in_function = $Matches[0]
+    }
+
+    return $show_id_in_function,$found_show_in_shows_info
+}
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 # Check if every show to search exists in the HorribleSubs info (id, name etc...)
 
-Write-Host
-Write-Host "[INFO] Checking if the shows are in the HorribleSubs info`n" -ForegroundColor Yellow
+Write-Host "`n[INFO] Checking if the shows are in the HorribleSubs info`n" -ForegroundColor Yellow
 
 $shows_info = Get-Content -Path "$series_path\Animes_Ids.txt"
 
 foreach($show_to_search_for in $shows_to_search_for)
 {
-    if($shows_info -cmatch $show_to_search_for)
+    [boolean] $found_show_in_shows_info = $false
+    [string] $show_id = ""
+    $show_id,$found_show_in_shows_info = Get-Show-Id
+    
+    if($found_show_in_shows_info -eq $false)
     {
-        [string]($shows_info -cmatch $show_to_search_for) -match "\d+" | Out-Null
-        [string] $show_id = $Matches[0]
-
-        [int] $hazahot_num = 3 - $show_id.Length
-        [string] $hazahot = ""
-
-        for([int] $i = 0;$i -le $hazahot_num; $i++)
-        {
-             $hazahot += " "
-        }
-
-        Write-Host "[ $show_id $hazahot] $show_to_search_for" -ForegroundColor Cyan
-    }
-    else
-    {
-        Write-Host "[INFO] '$show_to_search_for' doesn't exist in the HorribleSubs info, re-creating Anime_Ids.txt file" -ForegroundColor Cyan
-        Write-Host
+        Write-Host "[INFO] '$show_to_search_for' doesn't exist in the HorribleSubs info, re-creating Anime_Ids.txt file`n" -ForegroundColor Cyan
 
         Remove-Item -Path "$series_path\Animes_Ids.txt" -Force | Out-Null
         New-Item -Path $series_path -Name "Animes_Ids.txt" -ItemType File -Force | Out-Null
@@ -228,6 +243,18 @@ foreach($show_to_search_for in $shows_to_search_for)
         Get-HorribleSubs-Info
 
         break
+    }
+    else
+    {
+        [int] $hazahot_num = 3 - $show_id.Length
+        [string] $hazahot = ""
+
+        for([int] $i = 0; $i -le $hazahot_num; $i++)
+        {
+             $hazahot += " "
+        }
+
+        Write-Host "[ $show_id $hazahot] $show_to_search_for" -ForegroundColor Cyan
     }
 }
 
@@ -244,10 +271,14 @@ $shows_info = Get-Content -Path "$series_path\Animes_Ids.txt"
 
 foreach($show_to_search_for in $shows_to_search_for)
 {
-    [string]($shows_info -cmatch $show_to_search_for) -match "\d+" | Out-Null
-    [string] $show_id = $Matches[0]
+    [string] $show_id = (Get-Show-Id)[0]
     [int] $show_page_interval = 0
     $show_page = ""
+
+    if($show_to_search_for -match "(\[|\])")
+    {
+        $show_to_search_for = $show_to_search_for -replace "\[","\[" -replace "\]","\]"
+    }
 
     while($show_page -ne "DONE")
     {
@@ -287,6 +318,12 @@ foreach($show_to_search_for in $shows_to_search_for)
                     $torrents_downloading++
                     start $magnet_link
                     $magnet_link = $null
+
+                    if($show_to_search_for -match "(\[|\])")
+                    {
+                        $show_to_search_for = $show_to_search_for -replace "\\",""
+                    }
+
                     Write-Host "[DOWNLOADING] $show_to_search_for #$div_episode_number $episode_quality" -ForegroundColor Cyan
                 }
             }
