@@ -77,7 +77,16 @@ foreach($show_folder in $shows_folders)
         $Matches[0] -match "\d+" | Out-Null
         [string] $show_episode_need_to_see = $Matches[0]
 
-        [string[]] $episodes_in_folder = Get-ChildItem -Path $show_folder.FullName |`
+        if($show_folder.FullName -match "(\[|\])")
+        {
+            $tmp_show_folder_full_name = $show_folder.FullName -replace '\[','``[' -replace '\]','``]'
+        }
+        else
+        {
+            $tmp_show_folder_full_name = $show_folder.FullName
+        }
+
+        [string[]] $episodes_in_folder = Get-ChildItem -Path $tmp_show_folder_full_name |`
                                          Select-Object -ExpandProperty Name | % {
                                             if($_ -match $regex_episode)
                                             {
@@ -277,7 +286,11 @@ foreach($show_to_search_for in $shows_to_search_for)
 
     if($show_to_search_for -match "(\[|\])")
     {
-        $show_to_search_for = $show_to_search_for -replace "\[","\[" -replace "\]","\]"
+        $tmp_show_to_search_for = $show_to_search_for -replace "\[","\[" -replace "\]","\]"
+    }
+    else
+    {
+        $tmp_show_to_search_for = $show_to_search_for
     }
 
     while($show_page -ne "DONE")
@@ -287,10 +300,10 @@ foreach($show_to_search_for in $shows_to_search_for)
 
         foreach($show_page_div in $show_page_divs)
         {
-            if($show_page_div -match "id=`"0?\d+v?\d+?-$episode_quality`"" -and $show_page_div -match "$show_to_search_for - 0?\d+v?\d+? \[$episode_quality\]")
+            if($show_page_div -match "id=`"0?\d+v?\d+?-$episode_quality`"" -and $show_page_div -match "$tmp_show_to_search_for - 0?\d+v?\d+? \[$episode_quality\]")
             {
                 $div -match "id=`"0?\d+v?\d+?-$episode_quality`"" | Out-Null
-                [string] $tmp_checker_for_v = $Matches[0] -replace "($show_to_search_for - | \[$episode_quality\])",""
+                [string] $tmp_checker_for_v = $Matches[0] -replace "($tmp_show_to_search_for - | \[$episode_quality\])",""
                 
                 if($tmp_checker_for_v -match "v\d+")
                 {
@@ -307,6 +320,11 @@ foreach($show_to_search_for in $shows_to_search_for)
                                     -split "class=`"rls-link link-$episode_quality`" id=`"0?\d+v?\d+?-$episode_quality`"><span class=`"rls-link-label`">$episode_quality`:</span><span class=`"dl-type hs-magnet-link`"><a title=`"Magnet Link`" href=`"" `
                                     -split "`">Magnet")[3]
 
+                    if($show_to_search_for -match "(\[|\])")
+                    {
+                        $show_to_search_for = $show_to_search_for -replace "\\",""
+                    }
+                        
                     if(!$shows_episodes_found.Contains($show_to_search_for))
                     {
                         $shows_episodes_found.Add($show_to_search_for,$true)
@@ -356,9 +374,19 @@ if($torrents_downloading -gt 0)
 
         foreach($show_to_search_for in $shows_to_search_for)
         {
+            if($show_to_search_for -match "(\[|\])")
+            {
+                $show_to_search_for = $show_to_search_for -replace "\[","\[" -replace "\]","\]"
+            }
+
             if($files_in_default_torrent_download_path -match $show_to_search_for)
             {
                 $files = $files_in_default_torrent_download_path -match $show_to_search_for
+
+                if($show_to_search_for -match "(\[|\])")
+                {
+                    $show_to_search_for = $show_to_search_for -replace "\\",""
+                }
 
                 foreach($file in $files)
                 {
