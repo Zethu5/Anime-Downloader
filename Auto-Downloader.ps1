@@ -34,7 +34,7 @@ Param
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [int]
-        $torrent_check_internval = 2,
+        $torrent_check_internval = 1,
 
         # Episode quality
         [Parameter(Mandatory=$false, 
@@ -374,15 +374,25 @@ if($torrents_downloading -gt 0)
 
         foreach($show_to_search_for in $shows_to_search_for)
         {
+            $files = @()
+
             if($show_to_search_for -match "(\[|\])")
             {
                 $show_to_search_for = $show_to_search_for -replace "\[","\[" -replace "\]","\]"
             }
 
-            if($files_in_default_torrent_download_path -match $show_to_search_for)
+            foreach($file in $files_in_default_torrent_download_path)
             {
-                $files = $files_in_default_torrent_download_path -match $show_to_search_for
+                [string] $file_name = $file.Name -replace "^\[.+\]\s","" -replace "\s-.+$",""
 
+                if($file_name -eq $show_to_search_for)
+                {
+                    $files += $file
+                }
+            }
+
+            if($files)
+            {
                 if($show_to_search_for -match "(\[|\])")
                 {
                     $show_to_search_for = $show_to_search_for -replace "\\",""
