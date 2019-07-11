@@ -61,7 +61,7 @@ $shows_folders = $(Get-ChildItem -Path $series_path -Directory -Force -Attribute
 
 [string[]] $shows_to_search_for = @()
 
-Write-Host "[INFO] Getting shows folders that are actively being watched`n" -ForegroundColor Yellow
+Write-Host "[INFO] Getting shows folders that are actively being watched" -ForegroundColor Yellow
 
 $shows_episodes_in_folder = @{}
 $shows_episodes_to_search = @{}
@@ -142,7 +142,7 @@ if(!(Test-Path "$series_path\Animes_Ids.txt"))
 }
 else
 {
-    Write-Host "[INFO] Anime_Ids.txt file does exist, checking last write time" -ForegroundColor Yellow
+    Write-Host "[INFO] Anime_Ids.txt file exists, checking last write time" -ForegroundColor Yellow
     $animes_ids_last_write_time = Get-ChildItem -Path $series_path\Animes_Ids.txt | Select-Object -ExpandProperty LastWriteTime
 
     if((New-TimeSpan -Start $animes_ids_last_write_time -End $(Get-Date) | Select-Object -ExpandProperty Days) -lt $update_anime_info_interval)
@@ -232,7 +232,7 @@ function Get-Show-Id()
 
 # Check if every show to search exists in the HorribleSubs info (id, name etc...)
 
-Write-Host "`n[INFO] Checking if the shows are in the HorribleSubs info`n" -ForegroundColor Yellow
+Write-Host "`n[INFO] Checking if the shows are in the HorribleSubs info" -ForegroundColor Yellow
 
 $shows_info = Get-Content -Path "$series_path\Animes_Ids.txt"
 
@@ -271,10 +271,11 @@ Write-Host
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Write-Host "[INFO] Getting torrent magnet link for each show`n" -ForegroundColor Yellow
+Write-Host "[INFO] Getting torrent magnet link for each show" -ForegroundColor Yellow
 
 [int] $torrents_downloading = 0
 $shows_episodes_found = @{}
+$page_links = @("place_holder")
 
 $shows_info = Get-Content -Path "$series_path\Animes_Ids.txt"
 
@@ -293,32 +294,30 @@ foreach($show_to_search_for in $shows_to_search_for)
         $tmp_show_to_search_for = $show_to_search_for
     }
 
-    while($show_page -ne "DONE")
+    while($page_links.Count -gt 0)
     {
-        $show_page = Invoke-WebRequest -UseBasicParsing -Uri "$horriblesubs_url=$show_id&nextid=$show_page_interval" | Select-Object -ExpandProperty Content
-        $show_page_divs = $show_page -split '<div class="rls-links-container">'
+        $page_links = Invoke-WebRequest -UseBasicParsing -Uri "$horriblesubs_url=$show_id&nextid=$show_page_interval" | Select-Object -ExpandProperty Links
 
-        foreach($show_page_div in $show_page_divs)
+        foreach($page_link in $page_links)
         {
-            if($show_page_div -match "id=`"0?\d+v?\d+?-$episode_quality`"" -and $show_page_div -match "$tmp_show_to_search_for - 0?\d+v?\d+? \[$episode_quality\]")
+            if($page_link.outerHTML -match "<strong>0?\d+</strong>")
             {
-                $div -match "id=`"0?\d+v?\d+?-$episode_quality`"" | Out-Null
-                [string] $tmp_checker_for_v = $Matches[0] -replace "($tmp_show_to_search_for - | \[$episode_quality\])",""
-                
-                if($tmp_checker_for_v -match "v\d+")
-                {
-                    [int] $div_episode_number = $tmp_checker_for_v -replace "v\d+",""
-                }
-                else
-                {
-                    [int] $div_episode_number = $tmp_checker_for_v
-                }
+                $page_link.outerHTML -match "<strong>0?\d+</strong>" | Out-Null
+                [int] $link_episode_number = $Matches[0] -replace "</?strong>",""
+            }
 
-                if($div_episode_number -ge $shows_episodes_to_search.$show_to_search_for -and $shows_episodes_in_folder.$show_to_search_for -notcontains $div_episode_number)
+            if($link_episode_number -ge $shows_episodes_to_search.$show_to_search_for -and $shows_episodes_in_folder.$show_to_search_for -notcontains $link_episode_number)
+            {
+                if($page_link.outerHTML -match "<a title=`"Magnet Link`"")
                 {
-                    $magnet_link = ($show_page_div `
-                                    -split "class=`"rls-link link-$episode_quality`" id=`"0?\d+v?\d+?-$episode_quality`"><span class=`"rls-link-label`">$episode_quality`:</span><span class=`"dl-type hs-magnet-link`"><a title=`"Magnet Link`" href=`"" `
-                                    -split "`">Magnet")[3]
+                    [string] $magnet_link = $page_link.outerHTML -replace "^\<.+href=`"","" -replace "`"\>.+$"
+                }
+    
+                if($page_link.href -and $page_link.href -match "$tmp_show_to_search_for - 0?$link_episode_number \[$episode_quality\]")
+                {
+                    $torrents_downloading++
+                    start $magnet_link
+                    $magnet_link = $null
 
                     if($show_to_search_for -match "(\[|\])")
                     {
@@ -329,20 +328,8 @@ foreach($show_to_search_for in $shows_to_search_for)
                     {
                         $shows_episodes_found.Add($show_to_search_for,$true)
                     }
-                }
 
-                if($magnet_link)
-                {
-                    $torrents_downloading++
-                    start $magnet_link
-                    $magnet_link = $null
-
-                    if($show_to_search_for -match "(\[|\])")
-                    {
-                        $show_to_search_for = $show_to_search_for -replace "\\",""
-                    }
-
-                    Write-Host "[DOWNLOADING] $show_to_search_for #$div_episode_number $episode_quality" -ForegroundColor Cyan
+                    Write-Host "[DOWNLOADING] $show_to_search_for #$link_episode_number $episode_quality" -ForegroundColor Cyan
                 }
             }
         }
@@ -404,7 +391,7 @@ if($torrents_downloading -gt 0)
                     {
                         Move-Item -LiteralPath $file.FullName -Destination "$series_path\$show_to_search_for - $($shows_episodes_to_search.$show_to_search_for)"
                         $torrents_finished++
-                        Write-Host "[INFO] Moved $($file.FullName) to $series_path\$show_to_search_for - $($shows_episodes_to_search.$show_to_search_for)" -ForegroundColor Yellow
+                        Write-Host "[INFO] Moved $($file.FullName) to $series_path\$show_to_search_for - $($shows_episodes_to_search.$show_to_search_for)" -ForegroundColor Cyan
                     }
                     catch{}
                 }
