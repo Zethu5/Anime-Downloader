@@ -275,12 +275,12 @@ Write-Host "[INFO] Getting torrent magnet link for each show" -ForegroundColor Y
 
 [int] $torrents_downloading = 0
 $shows_episodes_found = @{}
-$page_links = @("place_holder")
 
 $shows_info = Get-Content -Path "$series_path\Animes_Ids.txt"
 
 foreach($show_to_search_for in $shows_to_search_for)
 {
+    $page_links = @("place_holder")
     [string] $show_id = (Get-Show-Id)[0]
     [int] $show_page_interval = 0
     $show_page = ""
