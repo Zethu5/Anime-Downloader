@@ -363,14 +363,9 @@ if($torrents_downloading -gt 0)
         {
             $files = @()
 
-            if($show_to_search_for -match "(\[|\])")
-            {
-                $show_to_search_for = $show_to_search_for -replace "\[","\[" -replace "\]","\]"
-            }
-
             foreach($file in $files_in_default_torrent_download_path)
             {
-                [string] $file_name = $file.Name -replace "^\[.+\]\s","" -replace "\s-.+$",""
+                [string] $file_name = $file.Name -replace "^\[HorribleSubs\]\s","" -replace "\s-.+$",""
 
                 if($file_name -eq $show_to_search_for)
                 {
@@ -380,11 +375,6 @@ if($torrents_downloading -gt 0)
 
             if($files)
             {
-                if($show_to_search_for -match "(\[|\])")
-                {
-                    $show_to_search_for = $show_to_search_for -replace "\\",""
-                }
-
                 foreach($file in $files)
                 {
                     try
