@@ -86,7 +86,7 @@ foreach($show_folder in $shows_folders)
             $tmp_show_folder_full_name = $show_folder.FullName
         }
 
-        [string[]] $episodes_in_folder = Get-ChildItem -Path $tmp_show_folder_full_name |`
+        [string[]] $episodes_in_folder = Get-ChildItem -Path $tmp_show_folder_full_name -Recurse |`
                                          Select-Object -ExpandProperty Name | % {
                                             if($_ -match $regex_episode)
                                             {
