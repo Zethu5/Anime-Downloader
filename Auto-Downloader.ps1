@@ -370,7 +370,7 @@ if($torrents_downloading -gt 0)
             {
                 [string] $file_name = $file.Name -replace "^\[HorribleSubs\]\s","" -replace "\s-\s0?\d+.+$",""
 
-                if($file_name -eq $show_to_search_for)
+                if($file_name -eq ($show_to_search_for -replace "–","-"))
                 {
                     $files += $file
                 }
