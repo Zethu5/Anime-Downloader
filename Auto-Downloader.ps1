@@ -1,4 +1,5 @@
-﻿# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+﻿# V1
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # ~~~~~~~~~~~~~~~~~~~~~~~ Config ~~~~~~~~~~~~~~~~~~~~~~~ #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
@@ -214,7 +215,7 @@ function Get-Show-Id()
     {
         foreach($show_info in $shows_info)
         {
-            if(($show_info -replace "\w+ \|\| ","") -eq $show_to_search_for)
+            if(($show_info -replace "\w+ \|\| ","") -eq ($show_to_search_for -replace "–","-"))
             {
                 $found_show_in_shows_info = $true
                 break  
@@ -294,15 +295,17 @@ foreach($show_to_search_for in $shows_to_search_for)
         $tmp_show_to_search_for = $show_to_search_for
     }
 
+    $tmp_show_to_search_for = $tmp_show_to_search_for -replace "–","-"
+
     while($page_links.Count -gt 0)
     {
         $page_links = Invoke-WebRequest -UseBasicParsing -Uri "$horriblesubs_url=$show_id&nextid=$show_page_interval" | Select-Object -ExpandProperty Links
 
         foreach($page_link in $page_links)
         {
-            if($page_link.outerHTML -match "<strong>0?\d+</strong>")
+            if($page_link.outerHTML -match "<strong>0?\d+?.?\d</strong>")
             {
-                $page_link.outerHTML -match "<strong>0?\d+</strong>" | Out-Null
+                $page_link.outerHTML -match "<strong>0?\d+?.?\d</strong>" | Out-Null
                 [int] $link_episode_number = $Matches[0] -replace "</?strong>",""
             }
 
@@ -313,7 +316,7 @@ foreach($show_to_search_for in $shows_to_search_for)
                     [string] $magnet_link = $page_link.outerHTML -replace "^\<.+href=`"","" -replace "`"\>.+$"
                 }
     
-                if($page_link.href -and $page_link.href -match "$tmp_show_to_search_for - 0?$link_episode_number \[$episode_quality\]")
+                if($page_link.href -and ($page_link.href -replace "–","-") -match "$tmp_show_to_search_for - 0?$link_episode_number \[$episode_quality\]")
                 {
                     $torrents_downloading++
                     start $magnet_link
