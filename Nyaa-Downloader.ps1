@@ -250,7 +250,8 @@ if($num_torrents_downloading -gt 0)
     {
         foreach($show_to_search in $shows_to_search)
         {
-            $file_names_that_match = $file_names -match "$show_to_search`?\s+\-?\s+" 
+            $file_names_that_match = $file_names -match ("$show_to_search`?\s+\-?\s+" -replace "\(","\(" `
+                                                                                      -replace "\)","\)")
 
             foreach($file in $file_names_that_match)
             {
