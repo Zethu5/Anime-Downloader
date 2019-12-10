@@ -41,7 +41,7 @@ Param
                    Position=4)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet("1080p", "720p", "480p")]
+        [ValidateSet("1080p", "720p")]
         [string]
         $episode_quality = "1080p",
 
@@ -250,7 +250,7 @@ if($num_torrents_downloading -gt 0)
     {
         foreach($show_to_search in $shows_to_search)
         {
-            $file_names_that_match = $file_names -match $show_to_search
+            $file_names_that_match = $file_names -match "$show_to_search`?\s+\-?\s+" 
 
             foreach($file in $file_names_that_match)
             {
@@ -264,9 +264,9 @@ if($num_torrents_downloading -gt 0)
                 {
                     Move-Item -LiteralPath "$torrent_default_download_path\$file" -Destination "$series_path\$show_to_search - $($shows_episode_to_search.$show_to_search)\$file_prefix"
                     $num_torrents_finished++
-                    Write-Host "[  " -NoNewline -ForegroundColor Cyan
+                    Write-Host "[    " -NoNewline -ForegroundColor Cyan
                     Write-Host "MOVED" -NoNewline -ForegroundColor Yellow -BackgroundColor Black
-                    Write-Host "        ] " -NoNewline -ForegroundColor Cyan
+                    Write-Host "      ] " -NoNewline -ForegroundColor Cyan
                     Write-Host " $torrent_default_download_path$file" -NoNewline -ForegroundColor Yellow -BackgroundColor Black
                     Write-Host " " -NoNewline
                     Write-Host "---->" -NoNewline -ForegroundColor Green
