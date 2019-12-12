@@ -250,12 +250,12 @@ if($num_torrents_downloading -gt 0)
     {
         foreach($show_to_search in $shows_to_search)
         {
-            $file_names_that_match = $file_names -match ("$show_to_search`?\s+\-?\s+" -replace "\(","\(" `
-                                                                                      -replace "\)","\)")
+            $file_names_that_match = $file_names -match ("$show_to_search`?\s+\-?\s+" -replace "\(","\(" -replace "\)","\)")
 
             foreach($file in $file_names_that_match)
             {
-                [string] $file -match "$show_to_search.+\-\s+?\d+" | Out-Null
+                $Matches.Clear()
+                [string] $file -match "$(("$show_to_search`?\s+\-?\s+" -replace "\(","\(" -replace "\)","\)"))\d+" | Out-Null
                 $Matches[0] -match "\d+$" | Out-Null
 
                 [string] $file_episode_number = $Matches[0]
