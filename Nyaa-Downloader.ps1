@@ -159,7 +159,7 @@ foreach($show_to_search in $shows_to_search)
             $page = Invoke-WebRequest -UseBasicParsing -Uri $full_url
             $links = $page.Links
 
-            [string] $show_and_episode_prefix = "\[$($uploaders[$i])\]?\s+$($show_to_search)?.+?\s+\-?\s+\d+.+\[$episode_quality\]"
+            [string] $show_and_episode_prefix = "\[$($uploaders[$i])\]?\s+$($show_to_search)?.+?\s+\-?\s+\d+.+\[$episode_quality\]" -replace "\'","\&\#39\;"
 
             for([int] $j = 0;$j -lt $links.Count; $j++)
             {
