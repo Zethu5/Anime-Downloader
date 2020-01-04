@@ -207,7 +207,7 @@ foreach($show_to_search in $shows_to_search)
 
                         $tmp = $links[$j].outerHTML -split "\n"
                         $tmp[1] -match "[^\s]+.+" | Out-Null
-                        $file_names += $Matches[0]
+                        $file_names += $Matches[0] -replace "\&\#39\;","'"
 
                         if(!$shows_episodes_found.$show_to_search)
                         {
