@@ -45,7 +45,7 @@ Param
         [string]
         $episode_quality = "1080p",
 
-        # Episode quality
+        # Uploaders
         [Parameter(Mandatory=$false, 
                    Position=5)]
         [ValidateNotNull()]
