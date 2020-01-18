@@ -299,3 +299,38 @@ else
 {
     Write-Host "[INFO] Didn't find any episode to download, exiting" -ForegroundColor Yellow -BackgroundColor DarkMagenta
 }
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+if($num_torrents_downloading -gt 0)
+{
+    Write-Host "[INFO] Renaming names of new folders" -ForegroundColor Yellow -BackgroundColor DarkMagenta
+
+    foreach($folder_name in $folders_names)
+    {
+        if($folder_name -match "\s+?\-\s+?0$")
+        {
+            [string] $folder_name_without_zero_at_the_end = $folder_name -replace '\s+?\-\s+?0$',''
+
+            if($shows_episodes_found.Keys -match $folder_name_without_zero_at_the_end)
+            {
+                try
+                {
+                    Rename-Item -Path "$series_path\$folder_name" -NewName "$folder_name_without_zero_at_the_end - 1"
+                    Write-Host "[   " -NoNewline -ForegroundColor Cyan
+                    Write-Host "RENAMING" -NoNewline -ForegroundColor Yellow -BackgroundColor Black
+                    Write-Host "    ] " -NoNewline -ForegroundColor Cyan
+                    Write-Host "$folder_name" -NoNewline -ForegroundColor Yellow -BackgroundColor Black
+                    Write-Host " " -NoNewline
+                    Write-Host "---->" -NoNewline -ForegroundColor Green
+                    Write-Host " " -NoNewline
+                    Write-Host "$folder_name_without_zero_at_the_end - 1" -ForegroundColor Yellow -BackgroundColor Black
+                }
+                catch
+                {
+                    Write-Host "[     ERROR     ] There was an error renaming the folder '$folder_name' to '$folder_name - 1'" -ForegroundColor Red
+                }
+            }
+        }
+    }
+}
