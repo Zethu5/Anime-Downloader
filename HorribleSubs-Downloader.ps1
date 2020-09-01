@@ -47,7 +47,7 @@ $ErrorActionPreference = "Stop"
 $shows_data = @()
 
 $shows_folders = Get-ChildItem -LiteralPath $series_path -Directory -Depth 0 | `
-                 ? {$_.BaseName -notmatch "[IGNORE]$"}
+                 ? {$_.BaseName -notmatch "\[IGNORE\]$"}
 
 $horrible_subs_shows = Invoke-WebRequest -Uri $horrible_subs_shows_url -UseBasicParsing
 
@@ -70,7 +70,7 @@ foreach($show_folder in $shows_folders)
         # Get episodes in folder
         [string[]] $episodes_list = @()
 
-        foreach($episode_name in (Get-ChildItem -Path $show_folder.Name -File -Depth 0))
+        foreach($episode_name in (Get-ChildItem -Path $show_folder.FullName -File -Depth 0))
         {
             $episode_name.Name -match "\s+\-\s+\d+" | Out-Null
             $Matches[0] -match "\d+$" | Out-Null
