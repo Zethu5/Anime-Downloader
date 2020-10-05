@@ -143,6 +143,7 @@ foreach($show_to_search in $shows_to_search)
     [string] $show_prefix_in_nyaa = $show_to_search -replace "\s+","+"
     [int] $nyaa_url_page = 1
     $page = ""
+    [string] $nyaa_batch_prefix = "\d+\s+\~\s+\d+"
     
     while(!$reached_end)
     {
@@ -158,7 +159,7 @@ foreach($show_to_search in $shows_to_search)
             for([int] $j = 0;$j -lt $links.Count; $j++)
             {
                 # Check if the show name and episode quality match the user prefrences
-                if($links[$j].outerHTML -and $links[$j].outerHTML -match $show_and_episode_prefix)
+                if($links[$j].outerHTML -and $links[$j].outerHTML -match $show_and_episode_prefix -and $links[$j].outerHTML -notmatch $nyaa_batch_prefix)
                 {
                     $links[$j].outerHTML -match $show_and_episode_prefix | Out-Null
 
