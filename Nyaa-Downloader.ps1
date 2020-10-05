@@ -20,17 +20,9 @@ Param
         [string]
         $torrent_default_download_path = "E:\",
 
-        # Update the anime info (in days)
-        [Parameter(Mandatory=$false,
-                   Position=2)]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [int]
-        $update_anime_info_interval = 7,
-
         # Torrent check interval (in minutes)
         [Parameter(Mandatory=$false, 
-                   Position=3)]
+                   Position=2)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [int]
@@ -38,7 +30,7 @@ Param
 
         # Episode quality
         [Parameter(Mandatory=$false, 
-                   Position=4)]
+                   Position=3)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidateSet("1080p", "720p")]
@@ -47,11 +39,11 @@ Param
 
         # Uploaders
         [Parameter(Mandatory=$false, 
-                   Position=5)]
+                   Position=4)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [string[]]
-        $uploaders = @('Erai-raws')
+        $uploaders = @('Erai-raws','SSA')
 )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -63,8 +55,9 @@ $ErrorActionPreference = "Stop"
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Get all shows that are being watched
 
-$shows_folders = Get-ChildItem -LiteralPath $series_path -Directory -Depth 1
-[string[]] $folders_names = $shows_folders | Select-Object -ExpandProperty Name
+$shows_folders = Get-ChildItem -LiteralPath $series_path -Directory -Depth 0
+[string[]] $folders_names = $shows_folders | Where-Object {$_.BaseName -notmatch "\s+?\-\s+?Ignore$"}`
+                                           | Select-Object -ExpandProperty Name
 [string[]] $shows_being_watched = @()
 [string] $regex_episode_indicator = "\s+?\-\s+?\d+"
 
@@ -120,7 +113,8 @@ foreach($show_being_watched in $shows_being_watched)
     $Matches[0] -match "\d+" | Out-Null
     [string] $show_episode_need_to_see = $Matches[0]
 
-    [string[]] $episodes_in_folder = Get-ChildItem -LiteralPath "$series_path\$show_being_watched" -Recurse |`
+    [string[]] $episodes_in_folder = Get-ChildItem -LiteralPath "$series_path\$show_being_watched" `
+                                                    -Recurse |`
                                      Select-Object -ExpandProperty Name | % {
                                         if($_ -match $regex_episode_indicator)
                                         {
