@@ -151,7 +151,7 @@ foreach($show_to_search in $shows_to_search)
         # Check if any torrents exist in the page
         while(!$reached_end)
         {
-            [string] $full_url = "$tokyotosho_url_start=$show_to_search $filter_episodes_quality&username=$uploader&page=$page_index&type=1&searchName=true&size_min=&size_max="
+            [string] $full_url = "$tokyotosho_url_start=$show_to_search $filter_episodes_quality&username=$uploader&page=$page_index&type=1&searchName=true"
             $page = Invoke-WebRequest -Uri $full_url
 
             if(!($page.ParsedHtml.IHTMLDocument3_getElementsByTagName("tr") | ? { $_.className -match "category_0"}))
