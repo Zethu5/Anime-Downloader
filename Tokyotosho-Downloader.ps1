@@ -173,8 +173,7 @@ foreach($show_to_search in $shows_to_search)
                 # Website to visit for magnet link
                 [string] $page_episode_magnet_link_page_url = $tokyotosho_magnet_link_page_start + $page_episode.children[2].children[1].search
 
-                # Skip episodes with a 'v2' added to their episode number eg. 148v2, 85v1 etc...
-                if($page_episode_name -notmatch "\s+?\-\s+?\d+\s+")
+                if($page_episode_name -notmatch "\s+?\-\s+?\d+(v\d+)?\s+")
                 {
                     continue
                 }
@@ -182,7 +181,7 @@ foreach($show_to_search in $shows_to_search)
                 $Matches.Clear()
 
                 # Get episode number
-                $page_episode_name -match "\s+?\-\s+?\d+\s+" | Out-Null
+                $page_episode_name -match "\s+?\-\s+?\d+(v\d+)?\s+" | Out-Null
                 $Matches[0] -match "\d+" | Out-Null
                 [int] $page_episode_number = $Matches[0]
 
