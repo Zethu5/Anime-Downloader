@@ -56,10 +56,10 @@ $ErrorActionPreference = "Stop"
 # Get all shows that are being watched
 
 $shows_folders = Get-ChildItem -LiteralPath $series_path -Directory -Depth 0
-[string[]] $folders_names = $shows_folders | Where-Object {$_.BaseName -notmatch "\s+?\-\s+?Ignore$"}`
+[string[]] $folders_names = $shows_folders | ? {$_.BaseName -notmatch "\s+?\-\s+?Ignore$"}`
                                            | Select-Object -ExpandProperty Name
 [string[]] $shows_being_watched = @()
-[string] $regex_episode_indicator = "\s+?\-\s+?\d+"
+[string] $regex_episode_indicator = "(\s+)?\-(\s+)?\d+"
 
 foreach($folder_name in $folders_names)
 {
