@@ -163,7 +163,17 @@ foreach($show_to_search in $shows_to_search)
 
             foreach($page_episode in $page_episodes)
             {
-                if($page_episode.innerText -notmatch ($show_to_search -replace "\(","\(" -replace "\)","\)" -replace "\[","\[" -replace "\]","\]"))
+                [string] $regex_replace_space_class = ""
+                [string] $regex_dot_string = ""
+
+                # '-gt 1' because the files will always end with a '.mkv' file extension
+                if(($page_episode.children[1].children[1].children | ? {$_.className -eq "s"}).Count -gt 1)
+                {
+                      $regex_space_class = "\.\s+"
+                      $regex_dot_string = "."
+                }
+
+                if($page_episode.innerText -replace $regex_space_class,$regex_dot_string -notmatch ($show_to_search -replace "\(","\(" -replace "\)","\)" -replace "\[","\[" -replace "\]","\]"))
                 {
                     continue
                 }
