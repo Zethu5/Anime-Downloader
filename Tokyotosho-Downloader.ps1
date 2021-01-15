@@ -53,6 +53,23 @@ Param
 $ErrorActionPreference = "Stop"
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Check if Microsoft Office is intalled
+
+if(!(Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' | `
+   ? {$_.Publisher -eq "Microsoft Corporation" -and $_.DIsplayName -match "Microsoft Office"}))
+{
+
+    Write-Host "[     " -NoNewline -ForegroundColor Red
+    Write-Host "ERROR" -NoNewline -ForegroundColor Red -BackgroundColor Black
+    Write-Host "     ] " -NoNewline -ForegroundColor Red
+    Write-Host "Didn't find an installation of Microsoft Office" -ForegroundColor Red
+
+    pause
+    break
+}
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Get all shows that are being watched
 
 $shows_folders = Get-ChildItem -LiteralPath $series_path -Directory -Depth 0
