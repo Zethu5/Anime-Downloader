@@ -56,7 +56,7 @@ $ErrorActionPreference = "Stop"
 # Check if Microsoft Office is intalled
 
 if(!(Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' | `
-   ? {$_.Publisher -eq "Microsoft Corporation" -and $_.DIsplayName -match "Microsoft Office" -or $_.DIsplayName -match "Microsoft 365"}))
+   ? {$_.Publisher -eq "Microsoft Corporation" -and ($_.DisplayName -match "Microsoft Office" -or $_.DisplayName -match "Microsoft 365")}))
 {
 
     Write-Host "[     " -NoNewline -ForegroundColor Red
