@@ -43,7 +43,7 @@ Param
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [string[]]
-        $uploaders = @('Erai-raws','SSA')
+        $uploaders = @('Erai-raws','SSA', 'SmallSizedAnimations')
 )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -138,7 +138,6 @@ Write-Host "[INFO] Getting torrent magnet link for each show" -ForegroundColor Y
 $shows_episodes_found = @{}
 [int] $num_torrents_downloading = 0
 [string[]] $file_names = @()
-[string] $filter_episodes_quality = "-480p", "-720p", "-1080p" | ? {$_ -ne "-$episode_quality"}
 
 
 foreach($show_to_search in $shows_to_search)
@@ -151,7 +150,7 @@ foreach($show_to_search in $shows_to_search)
         # Check if any torrents exist in the page
         while(!$reached_end)
         {
-            [string] $full_url = "$tokyotosho_url_start=$show_to_search $filter_episodes_quality&username=$uploader&page=$page_index&type=1&searchName=true"
+            [string] $full_url = "$tokyotosho_url_start=$show_to_search $episode_quality&username=$uploader&page=$page_index&type=1&searchName=true"
             $page = Invoke-WebRequest -Uri $full_url
 
             if(!($page.ParsedHtml.IHTMLDocument3_getElementsByTagName("tr") | ? { $_.className -match "category_0"}))
