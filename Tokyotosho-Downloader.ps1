@@ -155,7 +155,6 @@ Write-Host "[INFO] Getting torrent magnet link for each show" -ForegroundColor Y
 [string] $tokyotosho_magnet_link_page_start = "https://www.tokyotosho.info/details.php"
 $shows_episodes_found = @{}
 [int] $num_torrents_downloading = 0
-[string[]] $file_names = @()
 $file_names_and_where_to_put_them = @{}
 
 
