@@ -145,16 +145,32 @@ foreach($show_being_watched in $shows_being_watched)
 }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Search episodes on shanaproject
+# Search episodes on tokyotosho
 # Get the magnet torrent site of each episode
 
 Write-Host "[INFO] Getting torrent magnet link for each show" -ForegroundColor Yellow -BackgroundColor DarkMagenta
 
+[string] $tokyotosho_url_clean = "https://www.tokyotosho.info"
 [string] $tokyotosho_url_start = "https://www.tokyotosho.info/search.php?terms"
 [string] $tokyotosho_magnet_link_page_start = "https://www.tokyotosho.info/details.php"
 $shows_episodes_found = @{}
 [int] $num_torrents_downloading = 0
 [string[]] $file_names = @()
+
+
+# check if the site is up
+try
+{
+    Invoke-WebRequest -Uri $tokyotosho_url_clean | Out-Null
+}
+catch
+{
+    Write-Host "[     " -NoNewline -ForegroundColor Cyan
+    Write-Host "ERROR" -NoNewline -ForegroundColor Red -BackgroundColor Black
+    Write-Host "     ] " -NoNewline -ForegroundColor Cyan
+    Write-Host "Couldn't reach $tokyotosho_url_clean, site down?" -ForegroundColor Red -BackgroundColor Black
+    break
+}
 
 
 foreach($show_to_search in $shows_to_search)
