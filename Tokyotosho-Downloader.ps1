@@ -43,7 +43,7 @@ Param
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [string[]]
-        $uploaders = @('Erai-raws','SSA', 'SmallSizedAnimations')
+        $uploaders = @('Erai-raws','SSA','SmallSizedAnimations')
 )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -156,6 +156,7 @@ Write-Host "[INFO] Getting torrent magnet link for each show" -ForegroundColor Y
 $shows_episodes_found = @{}
 [int] $num_torrents_downloading = 0
 [string[]] $file_names = @()
+$file_names_and_where_to_put_them = @{}
 
 
 # check if the site is up
@@ -258,9 +259,10 @@ foreach($show_to_search in $shows_to_search)
                         if($page_episode_magnet_link_page.Links | ? {$_.href -and $_.href -match "^magnet:"})
                         {
                             $href = ($page_episode_magnet_link_page.Links | ? {$_.href -and $_.href -match "^magnet:"}).href
-                            $file_names += ($page_episode_magnet_link_page.Links | ? {$_.href -and $_.type -match "application/x-bittorrent"} | `
-                                           Select-Object -ExpandProperty innerText) -replace "\s+\.","." -replace "\s+"," "
+                            $file_name = ($page_episode_magnet_link_page.Links | ? {$_.href -and $_.type -match "application/x-bittorrent"} | `
+                                         Select-Object -ExpandProperty innerText) -replace "\s+\.","." -replace "\s+"," "
 
+                            $file_names_and_where_to_put_them.Add($file_name,($shows_folders -match $show_to_search).Name)
                             start $href
                         }
 
@@ -301,34 +303,29 @@ if($num_torrents_downloading -gt 0)
 
     while($num_torrents_finished -lt $num_torrents_downloading)
     {
-        foreach($show_to_search in $shows_to_search)
+        foreach($record in $file_names_and_where_to_put_them.GetEnumerator())
         {
-            $file_names_that_match = $file_names -match ("$show_to_search`?\s+\-?\s+" -replace "\(","\(" -replace "\)","\)")
-
-            foreach($file in $file_names_that_match)
+            $Matches.Clear()
+            $record.Key -match "$(("\s+?\-\s+?" -replace "\(","\(" -replace "\)","\)"))\d+" | Out-Null
+            $Matches[0] -match "\d+$" | Out-Null
+            
+            [string] $file_episode_number = $Matches[0]
+            [string] $file_prefix = "$($record.Value -replace "\s+?\-\s+?\d+$") - $file_episode_number.mkv"
+            
+            try
             {
-                $Matches.Clear()
-                [string] $file -match "$(("$show_to_search`?\s+\-?\s+" -replace "\(","\(" -replace "\)","\)"))\d+" | Out-Null
-                $Matches[0] -match "\d+$" | Out-Null
-
-                [string] $file_episode_number = $Matches[0]
-                [string] $file_prefix = "$show_to_search - $file_episode_number.mkv"
-
-                try
-                {
-                    Move-Item -LiteralPath "$torrent_default_download_path\$file" -Destination "$series_path\$show_to_search - $($shows_episode_to_search.$show_to_search)\$file_prefix"
-                    $num_torrents_finished++
-                    Write-Host "[    " -NoNewline -ForegroundColor Cyan
-                    Write-Host "MOVED" -NoNewline -ForegroundColor Yellow -BackgroundColor Black
-                    Write-Host "      ] " -NoNewline -ForegroundColor Cyan
-                    Write-Host " $torrent_default_download_path$file" -NoNewline -ForegroundColor Yellow -BackgroundColor Black
-                    Write-Host " " -NoNewline
-                    Write-Host "---->" -NoNewline -ForegroundColor Green
-                    Write-Host " " -NoNewline
-                    Write-Host "$series_path\$show_to_search - $($shows_episode_to_search.$show_to_search)\$file_prefix" -ForegroundColor Yellow -BackgroundColor Black
-                }
-                catch{}
+                Move-Item -LiteralPath "$torrent_default_download_path\$($record.Key)" -Destination "$series_path\$($record.Value)\$file_prefix"
+                $num_torrents_finished++
+                Write-Host "[    " -NoNewline -ForegroundColor Cyan
+                Write-Host "MOVED" -NoNewline -ForegroundColor Yellow -BackgroundColor Black
+                Write-Host "      ] " -NoNewline -ForegroundColor Cyan
+                Write-Host " $torrent_default_download_path$($record.Key)" -NoNewline -ForegroundColor Yellow -BackgroundColor Black
+                Write-Host " " -NoNewline
+                Write-Host "---->" -NoNewline -ForegroundColor Green
+                Write-Host " " -NoNewline
+                Write-Host "$series_path\$show_to_search - $($shows_episode_to_search.$show_to_search)\$file_prefix" -ForegroundColor Yellow -BackgroundColor Black
             }
+            catch{}
         }
 
         if($num_torrents_finished -ne $num_torrents_downloading)
