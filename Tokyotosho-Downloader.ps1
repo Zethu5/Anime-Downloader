@@ -156,6 +156,7 @@ Write-Host "[INFO] Getting torrent magnet link for each show" -ForegroundColor Y
 $shows_episodes_found = @{}
 [int] $num_torrents_downloading = 0
 $file_names_and_where_to_put_them = @{}
+[string] $tokyotosho_warning_search_limit = "Exceeded search limit per hour \(200\)"
 
 
 # check if the site is up
@@ -173,7 +174,7 @@ catch
 }
 
 
-foreach($show_to_search in $shows_to_search)
+:outer foreach($show_to_search in $shows_to_search)
 {
     foreach($uploader in $uploaders)
     {
@@ -185,6 +186,16 @@ foreach($show_to_search in $shows_to_search)
         {
             [string] $full_url = "$tokyotosho_url_start=$show_to_search $episode_quality&username=$uploader&page=$page_index&type=1&searchName=true"
             $page = Invoke-WebRequest -Uri $full_url
+
+            if($page.RawContent -match $tokyotosho_warning_search_limit)
+            {
+                Write-Host "[     " -NoNewline -ForegroundColor Cyan
+                Write-Host "ERROR" -NoNewline -ForegroundColor Red -BackgroundColor Black
+                Write-Host "     ] " -NoNewline -ForegroundColor Cyan
+                Write-Host "Exceeded torrent search limit per hour (200)" -ForegroundColor Red -BackgroundColor Black
+
+                break outer
+            }
 
             if(!($page.ParsedHtml.IHTMLDocument3_getElementsByTagName("tr") | ? { $_.className -match "category_0"}))
             {
