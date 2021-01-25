@@ -176,6 +176,8 @@ catch
 
 :outer foreach($show_to_search in $shows_to_search)
 {
+    [boolean] $got_show_episode_searched_for = $false
+
     foreach($uploader in $uploaders)
     {
         [int] $page_index = 1
@@ -242,6 +244,13 @@ catch
 
                 $Matches.Clear()
 
+                # if the first episode number in this page is lower than the one we are searching for,
+                # there is no reason to continue searching other pages, we can safely break
+                if($page_episode_number -lt $shows_episode_to_search[$show_to_search])
+                {
+                    $got_show_episode_searched_for = $true
+                }
+
                 # Get episode quality
                 $page_episode_name -match "\[\d+p\]" | Out-Null
                 [string] $page_episode_quality = $Matches[0] -replace "[\[\]]",""
@@ -282,6 +291,13 @@ catch
                         Write-Host "[$uploader] $show_to_search - $page_episode_number [$episode_quality].mkv" -ForegroundColor Cyan
 
                         $num_torrents_downloading++
+
+                        # if the page episode number is equal to the one we are searching for in this specific show,
+                        # there's no need to continue to query later pages because they will only display older episodes, which is unnecessary
+                        if($page_episode_number -eq $shows_episode_to_search[$show_to_search])
+                        {
+                            $got_show_episode_searched_for = $true
+                        }
                     }
                     catch
                     {
@@ -295,6 +311,11 @@ catch
 
             $page_index++
             $Matches.Clear()
+
+            if($got_show_episode_searched_for)
+            {
+                break
+            }
         }
     }
 }
