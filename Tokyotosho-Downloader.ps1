@@ -292,7 +292,7 @@ catch
 
                         $num_torrents_downloading++
 
-                        # if the page episode number is equal to the one we are searching for in this specific show,
+                        # if the page episode number is equal to the one we are searching for in this specific show, 
                         # there's no need to continue to query later pages because they will only display older episodes, which is unnecessary
                         if($page_episode_number -eq $shows_episode_to_search[$show_to_search])
                         {
