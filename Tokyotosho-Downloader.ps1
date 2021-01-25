@@ -272,7 +272,7 @@ catch
                             $file_name = ($page_episode_magnet_link_page.Links | ? {$_.href -and $_.type -match "application/x-bittorrent"} | `
                                          Select-Object -ExpandProperty innerText) -replace "\s+\.","." -replace "\s+"," "
 
-                            $file_names_and_where_to_put_them.Add($file_name,($shows_folders -match $show_to_search).Name)
+                            $file_names_and_where_to_put_them.Add($file_name,($shows_folders -match ($show_to_search -replace "\(","\(" -replace "\)","\)")).Name)
                             start $href
                         }
 
