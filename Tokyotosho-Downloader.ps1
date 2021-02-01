@@ -73,12 +73,11 @@ if(!(Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall
 # Get all shows that are being watched
 
 $shows_folders = Get-ChildItem -LiteralPath $series_path -Directory -Depth 0
-[string[]] $folders_names = $shows_folders | ? {$_.BaseName -notmatch "(\s+)?\-(\s+)?Ignore$"}`
-                                           | Select-Object -ExpandProperty Name
-[string[]] $shows_being_watched = @()
-[string] $regex_episode_indicator = "(\s+)?\-(\s+)?\d+"
 
-foreach($folder_name in $folders_names)
+[string[]] $shows_being_watched = @()
+[string] $regex_episode_indicator = "(\s+)?\-(\s+)?\d+$"
+
+foreach($folder_name in $shows_folders)
 {
     if($folder_name -match $regex_episode_indicator)
     {
@@ -100,6 +99,7 @@ foreach($show_being_watched in $shows_being_watched)
 
     $show_being_watched -match "\d+$" | Out-Null
     [string] $episode_to_search = $Matches[0]
+    $Matches.Clear()
 
     $shows_episode_to_search.Add($show_name,$episode_to_search)
     $shows_to_search += $show_name
