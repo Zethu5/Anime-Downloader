@@ -133,7 +133,7 @@ foreach($show_being_watched in $shows_being_watched)
     [string[]] $episodes_in_folder = Get-ChildItem -LiteralPath "$series_path\$show_being_watched" `
                                                     -Recurse |`
                                      Select-Object -ExpandProperty Name | % {
-                                        if($_ -match $regex_episode_indicator)
+                                        if($_ -match "(\s+)?\-(\s+)?\d+.+\.\w+$")
                                         {
                                             $_ -match $regex_episode_indicator | Out-Null
                                             $Matches[0] -match "\d+" | Out-Null
