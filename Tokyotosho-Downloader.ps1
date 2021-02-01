@@ -264,11 +264,11 @@ catch
                 {
                     if(!$shows_episodes_found.$show_to_search)
                     {
-                        $shows_episodes_found.Add($show_to_search,$page_episode_number)
+                        $shows_episodes_found.Add($show_to_search,@($page_episode_number))
                     }
                     else
                     {
-                        $shows_episodes_found.$show_to_search = $shows_episodes_found.$show_to_search,$page_episode_number
+                        $shows_episodes_found.$show_to_search += $page_episode_number
                     }
 
                     try
