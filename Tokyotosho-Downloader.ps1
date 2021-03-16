@@ -354,7 +354,7 @@ if($num_torrents_downloading -gt 0)
                 Write-Host " " -NoNewline
                 Write-Host "---->" -NoNewline -ForegroundColor Green
                 Write-Host " " -NoNewline
-                Write-Host "$series_path\$show_to_search - $($shows_episode_to_search.$show_to_search)\$file_prefix" -ForegroundColor Yellow -BackgroundColor Black
+                Write-Host "$series_path\$($record.Value) - $($shows_episode_to_search.$show_to_search)\$file_prefix" -ForegroundColor Yellow -BackgroundColor Black
             }
             catch{}
         }
