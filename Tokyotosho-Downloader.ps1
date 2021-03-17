@@ -177,6 +177,7 @@ catch
 :outer foreach($show_to_search in $shows_to_search)
 {
     [boolean] $got_show_episode_searched_for = $false
+    [bool] $found_some_episode_for_show = $false
 
     foreach($uploader in $uploaders)
     {
@@ -318,10 +319,17 @@ catch
             }
         }
     }
+
+    if(!$found_some_episode_for_show)
+    {
+        Write-Host "[ " -NoNewline -ForegroundColor Cyan
+        Write-Host "NOTHING FOUND" -NoNewline -ForegroundColor Yellow -BackgroundColor Black
+        Write-Host " ] " -NoNewline -ForegroundColor Cyan
+        Write-Host "$show_to_search" -ForegroundColor DarkCyan
+    }
 }
 
 Write-Host
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Listen to torrents and move episodes to their destinations
 
