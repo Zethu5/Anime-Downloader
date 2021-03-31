@@ -291,6 +291,7 @@ catch
                         Write-Host "  ] " -NoNewline -ForegroundColor Cyan
                         Write-Host "[$uploader] $show_to_search - $page_episode_number [$episode_quality].mkv" -ForegroundColor Cyan
 
+                        $found_some_episode_for_show = $true
                         $num_torrents_downloading++
 
                         # if the page episode number is equal to the one we are searching for in this specific show, 
