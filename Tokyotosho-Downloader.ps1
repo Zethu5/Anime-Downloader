@@ -220,7 +220,8 @@ catch
                       $regex_dot_string = "."
                 }
 
-                if($page_episode.innerText -replace $regex_space_class,$regex_dot_string -notmatch ($show_to_search -replace "\(","\(" -replace "\)","\)" -replace "\[","\[" -replace "\]","\]"))
+                if($page_episode.innerText -replace $regex_space_class,$regex_dot_string -notmatch `
+                  ("$($show_to_search -replace "\(","\(" -replace "\)","\)" -replace "\[","\[" -replace "\]","\]")\s+?\-\s+?"))
                 {
                     continue
                 }
