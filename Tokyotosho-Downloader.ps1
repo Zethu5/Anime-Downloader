@@ -1,4 +1,4 @@
-﻿# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # ~~~~~~~~~~~~~~~~~~~~~~~ Config ~~~~~~~~~~~~~~~~~~~~~~~ #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
@@ -43,7 +43,7 @@ Param
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [string[]]
-        $uploaders = @('Erai-raws','SSA','SmallSizedAnimations')
+        $uploaders = @('Erai-raws','SSA','SmallSizedAnimations', 'SubsPlease')
 )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -188,6 +188,7 @@ catch
         while(!$reached_end)
         {
             [string] $full_url = "$tokyotosho_url_start=$show_to_search $episode_quality&username=$uploader&page=$page_index&type=1&searchName=true"
+            $full_url = "https://www.tokyotosho.info/search.php?terms=86 - Eighty Six 1080p&username=SubsPlease&page=1&type=1&searchName=true" # remove after
             $page = Invoke-WebRequest -Uri $full_url
 
             if($page.RawContent -match $tokyotosho_warning_search_limit)
@@ -254,8 +255,8 @@ catch
                 }
 
                 # Get episode quality
-                $page_episode_name -match "\[\d+p\]" | Out-Null
-                [string] $page_episode_quality = $Matches[0] -replace "[\[\]]",""
+                $page_episode_name -match "(\[\d+p\]|\(\d+p\))" | Out-Null
+                [string] $page_episode_quality = $Matches[0] -replace "[\[\]\(\)]",""
 
                 $Matches.Clear()
 
