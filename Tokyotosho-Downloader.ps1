@@ -188,7 +188,6 @@ catch
         while(!$reached_end)
         {
             [string] $full_url = "$tokyotosho_url_start=$show_to_search $episode_quality&username=$uploader&page=$page_index&type=1&searchName=true"
-            $full_url = "https://www.tokyotosho.info/search.php?terms=86 - Eighty Six 1080p&username=SubsPlease&page=1&type=1&searchName=true" # remove after
             $page = Invoke-WebRequest -Uri $full_url
 
             if($page.RawContent -match $tokyotosho_warning_search_limit)
