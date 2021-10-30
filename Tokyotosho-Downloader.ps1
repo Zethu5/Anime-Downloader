@@ -206,7 +206,10 @@ catch
                 continue
             }
 
-            $page_episodes = $page.ParsedHtml.IHTMLDocument3_getElementsByTagName("tr") | ? { $_.className -match "category_0"}
+            $page_episodes = $page.ParsedHtml.IHTMLDocument3_getElementsByTagName("tr") | ? { $_.className -match "category_0" -and 
+                                                                                              $_.children[2] -and 
+                                                                                              $_.children[2].children[1] -and
+                                                                                              $_.children[2].children[1].search -match "\?id=\d+"}}
 
             foreach($page_episode in $page_episodes)
             {
