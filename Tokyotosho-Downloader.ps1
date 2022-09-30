@@ -72,7 +72,7 @@ if(!(Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Get all shows that are being watched
 
-$shows_folders = Get-ChildItem -LiteralPath $series_path -Directory -Depth 0
+$shows_folders = @(Get-ChildItem -LiteralPath $series_path -Directory -Depth 0)
 
 [string[]] $shows_being_watched = @()
 [string] $regex_episode_indicator = "(\s+)?\-(\s+)?\d+$"
